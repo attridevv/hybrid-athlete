@@ -11,8 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, AlertTriangle, CheckCircle, Activity, TrendingUp, Clipboard, Bell } from "lucide-react";
 
-const DEMO_USER_ID = "demo-user";
-
 export default function InjuriesPage() {
   const [injuries, setInjuries] = useState<any[]>([]);
   const [risk, setRisk] = useState<any>(null);
@@ -27,11 +25,12 @@ export default function InjuriesPage() {
   });
 
   const update = (k: string, v: any) => setForm({ ...form, [k]: v });
+  const getSliderValue = (value: number | readonly number[]) => Array.isArray(value) ? value[0] : value;
 
   useEffect(() => {
-    fetch(`/api/injuries?userId=${DEMO_USER_ID}`).then(r => r.json()).then(setInjuries);
+    fetch("/api/injuries").then(r => r.json()).then(setInjuries);
     // Get analytics for injury risk
-    fetch(`/api/analytics?userId=${DEMO_USER_ID}`).then(r => r.json()).then(d => {
+    fetch("/api/analytics").then(r => r.json()).then(d => {
       if (d.load) setRisk(d);
     });
   }, []);
@@ -41,7 +40,7 @@ export default function InjuriesPage() {
       const res = await fetch("/api/injuries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: DEMO_USER_ID, ...form }),
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       setInjuries(prev => [data, ...prev]);
@@ -53,7 +52,7 @@ export default function InjuriesPage() {
       await fetch("/api/injuries", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, userId: DEMO_USER_ID, status: "recovered" }),
+        body: JSON.stringify({ id, status: "recovered" }),
       });
       setInjuries(prev => prev.map(i => i.id === id ? { ...i, status: "recovered" } : i));
     } catch (err) { console.error(err); }
@@ -158,7 +157,7 @@ export default function InjuriesPage() {
               </div>
               <div className="md:col-span-2">
                 <Label className="text-xs text-zinc-400">Severity: {form.severity}/10</Label>
-                <Slider value={[form.severity]} onValueChange={v => update("severity", v[0])} max={10} step={1} />
+                <Slider value={[form.severity]} onValueChange={v => update("severity", getSliderValue(v))} max={10} step={1} />
                 <div className="flex justify-between mt-1">
                   <span className="text-[10px] text-zinc-600">Mild</span>
                   <span className={`text-[10px] font-medium ${form.severity > 6 ? "text-red-400" : form.severity > 3 ? "text-amber-400" : "text-emerald-400"}`}>

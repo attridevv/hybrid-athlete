@@ -211,7 +211,7 @@ async function main() {
   console.log("Created readiness scores");
 
   // Create AI insight
-  await prisma.aiInsight.create({
+  await prisma.aIInsight.create({
     data: {
       userId: user.id,
       type: "weekly",

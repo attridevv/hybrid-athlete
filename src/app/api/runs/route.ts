@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { runSchema } from "@/lib/validation";
 import { calculateSessionLoad } from "@/lib/engines";
@@ -6,13 +7,8 @@ import { calculateSessionLoad } from "@/lib/engines";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, ...data } = body;
-
-    if (!userId) {
-      return NextResponse.json({ error: "User ID required" }, { status: 400 });
-    }
-
-    const validated = runSchema.parse(data);
+    const { id: userId } = await requireCurrentDbUser();
+    const validated = runSchema.parse(body);
 
     // Calculate efficiency = pace / avgHr
     const efficiency = validated.avgHr ? (validated.pace || validated.distance * 1000 / validated.duration * 60 / 1000) / validated.avgHr : null;
@@ -46,6 +42,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(run);
   } catch (error: any) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     if (error.name === "ZodError") {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
@@ -56,12 +55,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json({ error: "User ID required" }, { status: 400 });
-    }
+    const { id: userId } = await requireCurrentDbUser();
 
     const runs = await prisma.run.findMany({
       where: { userId },
@@ -71,6 +65,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(runs);
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch runs" }, { status: 500 });
   }
 }

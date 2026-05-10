@@ -28,6 +28,7 @@ export function CheckInForm() {
     shoulderPain: 0,
     notes: "",
   });
+  const getSliderValue = (value: number | readonly number[]) => Array.isArray(value) ? value[0] : value;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +61,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Quality: {formData.sleepQuality}/10</Label>
               <Slider
                 value={[formData.sleepQuality]}
-                onValueChange={(v) => setFormData({ ...formData, sleepQuality: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, sleepQuality: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"
@@ -111,7 +112,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Energy: {formData.energyLevel}/10</Label>
               <Slider
                 value={[formData.energyLevel]}
-                onValueChange={(v) => setFormData({ ...formData, energyLevel: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, energyLevel: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"
@@ -121,7 +122,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Motivation: {formData.motivation}/10</Label>
               <Slider
                 value={[formData.motivation]}
-                onValueChange={(v) => setFormData({ ...formData, motivation: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, motivation: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"
@@ -131,7 +132,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Stress: {formData.stressLevel}/10</Label>
               <Slider
                 value={[formData.stressLevel]}
-                onValueChange={(v) => setFormData({ ...formData, stressLevel: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, stressLevel: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"
@@ -139,7 +140,7 @@ export function CheckInForm() {
             </div>
             <div>
               <Label className="text-zinc-300">Mood</Label>
-              <Select value={formData.mood} onValueChange={(v) => setFormData({ ...formData, mood: v })}>
+              <Select value={formData.mood} onValueChange={(v) => setFormData({ ...formData, mood: v ?? "neutral" })}>
                 <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100">
                   <SelectValue />
                 </SelectTrigger>
@@ -191,7 +192,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Soreness: {formData.soreness}/10</Label>
               <Slider
                 value={[formData.soreness]}
-                onValueChange={(v) => setFormData({ ...formData, soreness: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, soreness: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"
@@ -214,7 +215,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Groin/Adductor: {formData.groinPain}/10</Label>
               <Slider
                 value={[formData.groinPain]}
-                onValueChange={(v) => setFormData({ ...formData, groinPain: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, groinPain: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"
@@ -224,7 +225,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Lower Back: {formData.lowerBackPain}/10</Label>
               <Slider
                 value={[formData.lowerBackPain]}
-                onValueChange={(v) => setFormData({ ...formData, lowerBackPain: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, lowerBackPain: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"
@@ -234,7 +235,7 @@ export function CheckInForm() {
               <Label className="text-zinc-300">Shoulder: {formData.shoulderPain}/10</Label>
               <Slider
                 value={[formData.shoulderPain]}
-                onValueChange={(v) => setFormData({ ...formData, shoulderPain: v[0] })}
+                onValueChange={(v) => setFormData({ ...formData, shoulderPain: getSliderValue(v) })}
                 max={10}
                 step={1}
                 className="py-2"

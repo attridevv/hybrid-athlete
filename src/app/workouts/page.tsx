@@ -10,10 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dumbbell, TrendingUp, Plus, Calendar } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const DEMO_USER_ID = "demo-user";
-
 export default function WorkoutsPage() {
   const [workouts, setWorkouts] = useState<any[]>([]);
+  const [weekCutoff] = useState(() => Date.now() - 7 * 86400000);
   const [exercises, setExercises] = useState<any[]>([]);
   const [form, setForm] = useState({
     type: "strength",
@@ -46,7 +45,7 @@ export default function WorkoutsPage() {
       const res = await fetch("/api/workouts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: DEMO_USER_ID, ...form, exercises }),
+        body: JSON.stringify({ ...form, exercises }),
       });
       const data = await res.json();
       setWorkouts(prev => [data, ...prev]);
@@ -57,7 +56,7 @@ export default function WorkoutsPage() {
   };
 
   const weeklyVolume = workouts
-    .filter(w => new Date(w.date).getTime() > Date.now() - 7 * 86400000)
+    .filter(w => new Date(w.date).getTime() > weekCutoff)
     .reduce((s, w) => s + (w.totalVolume || 0), 0);
 
   const volumeChart = [...workouts].reverse().map((w, i) => ({

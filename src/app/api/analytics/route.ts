@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
+import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { calculateReadiness, calculateACWR, assessInjuryRisk } from "@/lib/engines";
+import { calculateACWR } from "@/lib/engines";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    const { id: userId } = await requireCurrentDbUser();
 
     // Fetch last 30 days of data
     const [checkIns, runs, workouts, mobilityLogs, profile, readinessScores, trainingLoads] = await Promise.all([
@@ -77,6 +75,9 @@ export async function GET(request: Request) {
       trainingLoadHistory: trainingLoads.slice(0, 14),
     });
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     console.error("Error fetching analytics:", error);
     return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
   }

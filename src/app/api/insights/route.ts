@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
+import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { calculateReadiness, calculateACWR, assessInjuryRisk, predictRace, calculateProgression } from "@/lib/engines";
-import OpenAI from "openai";
+import { calculateACWR, assessInjuryRisk } from "@/lib/engines";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const { id: userId } = await requireCurrentDbUser();
 
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-
-    const insights = await prisma.aiInsight.findMany({
+    const insights = await prisma.aIInsight.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 20,
@@ -20,16 +15,16 @@ export async function GET(request: Request) {
 
     return NextResponse.json(insights);
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch insights" }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
-    const body = await request.json();
-    const { userId } = body;
-
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    const { id: userId } = await requireCurrentDbUser();
 
     // Gather all athlete data
     const [profile, checkIns, runs, workouts, injuries, mobilityLogs, readinessScores, trainingLoads] = await Promise.all([
@@ -129,16 +124,27 @@ Rules:
     const hasApiKey = !!process.env.OPENAI_API_KEY;
 
     if (hasApiKey) {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a tactical performance coach for hybrid athletes. Be direct, data-driven, and actionable. No fluff." },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 500,
-        temperature: 0.5,
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a tactical performance coach for hybrid athletes. Be direct, data-driven, and actionable. No fluff." },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: 500,
+          temperature: 0.5,
+        }),
       });
-      insightContent = completion.choices[0].message.content || "";
+
+      if (!response.ok) throw new Error("OpenAI request failed");
+
+      const completion = await response.json();
+      insightContent = completion.choices?.[0]?.message?.content || "";
     } else {
       // Rule-based insights (no API key)
       const readiness = readinessScores[0];
@@ -150,7 +156,7 @@ Rules:
       loadResult.status === "optimal" ? "ACWR optimal — continue current loading pattern" : "Adjust training load based on ACWR status",
     ].slice(0, 5);
 
-    const insight = await prisma.aiInsight.create({
+    const insight = await prisma.aIInsight.create({
       data: {
         userId,
         type: "weekly",
@@ -168,6 +174,9 @@ Rules:
 
     return NextResponse.json(insight);
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     console.error("Error generating AI insight:", error);
     return NextResponse.json({ error: "Failed to generate insight" }, { status: 500 });
   }
@@ -190,7 +199,7 @@ function generateRuleBasedInsight(
 
   // Recovery
   if (readiness) {
-    const zoneMap = { green: "well recovered", yellow: "moderately recovered", red: "under-recovered" };
+    const zoneMap: Record<string, string> = { green: "well recovered", yellow: "moderately recovered", red: "under-recovered" };
     parts.push(`Readiness Score: ${readiness.overall}/100 (${zoneMap[readiness.zone] || "unknown"}). Sleep quality: ${readiness.sleepScore}/100. RHR recovery: ${readiness.hrRecoveryScore}/100.`);
   }
 

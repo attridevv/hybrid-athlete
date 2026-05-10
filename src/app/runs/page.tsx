@@ -10,10 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, TrendingUp, Footprints, Calendar, Plus } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
-const DEMO_USER_ID = "demo-user";
-
 export default function RunsPage() {
   const [runs, setRuns] = useState<any[]>([]);
+  const [weekCutoff] = useState(() => Date.now() - 7 * 86400000);
   const [form, setForm] = useState({
     distance: 8,
     duration: 2400, // 40 min in seconds
@@ -35,7 +34,7 @@ export default function RunsPage() {
       const res = await fetch("/api/runs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: DEMO_USER_ID, ...form }),
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       setRuns(prev => [data, ...prev]);
@@ -45,7 +44,7 @@ export default function RunsPage() {
   };
 
   const weeklyMileage = runs
-    .filter(r => new Date(r.date).getTime() > Date.now() - 7 * 86400000)
+    .filter(r => new Date(r.date).getTime() > weekCutoff)
     .reduce((s, r) => s + r.distance, 0);
 
   const chartData = [...runs].reverse().map((r, i) => ({

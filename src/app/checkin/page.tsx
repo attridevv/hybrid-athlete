@@ -11,8 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Moon, Heart, Brain, Zap, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
-const DEMO_USER_ID = "demo-user";
-
 export default function CheckInPage() {
   const [submitted, setSubmitted] = useState(false);
   const [readiness, setReadiness] = useState<any>(null);
@@ -39,6 +37,7 @@ export default function CheckInPage() {
   });
 
   const update = (key: string, value: any) => setForm({ ...form, [key]: value });
+  const getSliderValue = (value: number | readonly number[]) => Array.isArray(value) ? value[0] : value;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +46,7 @@ export default function CheckInPage() {
       const res = await fetch("/api/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: DEMO_USER_ID, ...form }),
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       setReadiness(data.readiness);
@@ -148,7 +147,7 @@ export default function CheckInPage() {
                   <CardDescription>{form.sleepQuality}/10</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Slider value={[form.sleepQuality]} onValueChange={v => update("sleepQuality", v[0])} max={10} step={1} />
+                  <Slider value={[form.sleepQuality]} onValueChange={v => update("sleepQuality", getSliderValue(v))} max={10} step={1} />
                 </CardContent>
               </Card>
             </div>
@@ -188,15 +187,15 @@ export default function CheckInPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader><CardTitle className="text-zinc-100 text-sm">Energy: {form.energyLevel}/10</CardTitle></CardHeader>
-                <CardContent><Slider value={[form.energyLevel]} onValueChange={v => update("energyLevel", v[0])} max={10} step={1} /></CardContent>
+                <CardContent><Slider value={[form.energyLevel]} onValueChange={v => update("energyLevel", getSliderValue(v))} max={10} step={1} /></CardContent>
               </Card>
               <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader><CardTitle className="text-zinc-100 text-sm">Motivation: {form.motivation}/10</CardTitle></CardHeader>
-                <CardContent><Slider value={[form.motivation]} onValueChange={v => update("motivation", v[0])} max={10} step={1} /></CardContent>
+                <CardContent><Slider value={[form.motivation]} onValueChange={v => update("motivation", getSliderValue(v))} max={10} step={1} /></CardContent>
               </Card>
               <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader><CardTitle className="text-zinc-100 text-sm">Stress: {form.stressLevel}/10</CardTitle></CardHeader>
-                <CardContent><Slider value={[form.stressLevel]} onValueChange={v => update("stressLevel", v[0])} max={10} step={1} /></CardContent>
+                <CardContent><Slider value={[form.stressLevel]} onValueChange={v => update("stressLevel", getSliderValue(v))} max={10} step={1} /></CardContent>
               </Card>
               <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader><CardTitle className="text-zinc-100 text-sm">Mood</CardTitle></CardHeader>
@@ -222,7 +221,7 @@ export default function CheckInPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader><CardTitle className="text-zinc-100 text-sm">Soreness: {form.soreness}/10</CardTitle></CardHeader>
-                <CardContent><Slider value={[form.soreness]} onValueChange={v => update("soreness", v[0])} max={10} step={1} /></CardContent>
+                <CardContent><Slider value={[form.soreness]} onValueChange={v => update("soreness", getSliderValue(v))} max={10} step={1} /></CardContent>
               </Card>
               <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader><CardTitle className="text-zinc-100 text-sm">Daily Targets</CardTitle></CardHeader>
@@ -262,7 +261,7 @@ export default function CheckInPage() {
                     <CardTitle className="text-sm text-zinc-100">{label}: {(form as any)[key]}/10</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Slider value={[(form as any)[key]]} onValueChange={v => update(key, v[0])} max={10} step={1} />
+                    <Slider value={[(form as any)[key]]} onValueChange={v => update(key, getSliderValue(v))} max={10} step={1} />
                     <div className="flex justify-between mt-1">
                       <span className="text-[10px] text-zinc-600">No pain</span>
                       <span className={`text-[10px] font-medium ${

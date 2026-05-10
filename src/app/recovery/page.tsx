@@ -6,21 +6,18 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Moon, Heart, Zap, Activity, TrendingUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { calculateRecoveryScore } from "@/lib/utils";
-
-const DEMO_USER_ID = "demo-user";
 
 export default function RecoveryPage() {
   const [checkIns, setCheckIns] = useState<any[]>([]);
   const [readiness, setReadiness] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`/api/analytics?userId=${DEMO_USER_ID}`)
+    fetch("/api/analytics")
       .then(r => r.json())
       .then(d => {
         setReadiness(d.readinessHistory || []);
       });
-    fetch(`/api/checkin?userId=${DEMO_USER_ID}`)
+    fetch("/api/checkin")
       .then(r => r.json())
       .then(setCheckIns);
   }, []);

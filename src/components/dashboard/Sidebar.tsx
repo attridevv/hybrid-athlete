@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Activity, Heart, Dumbbell, TrendingUp, Brain, User, Shield } from "lucide-react";
@@ -20,12 +21,12 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-zinc-900 border-r border-zinc-800 p-6 max-md:hidden">
+    <aside className="fixed left-0 top-0 h-full w-64 bg-zinc-900 border-r border-zinc-800 p-6 max-md:hidden flex flex-col">
       <div className="mb-8">
-        <h1 className="text-lg font-bold text-zinc-100 tracking-tight">HYBRID ATHLETE</h1>
+        <h1 className="text-lg font-bold text-zinc-100 tracking-tight">VEKTOR</h1>
         <p className="text-[10px] text-zinc-500 mt-0.5 uppercase tracking-widest">Command Center</p>
       </div>
-      <nav className="space-y-0.5">
+      <nav className="space-y-0.5 flex-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -44,6 +45,10 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="pt-4 border-t border-zinc-800 flex items-center gap-3 text-xs text-zinc-500">
+        <UserButton />
+        <span>Signed in</span>
+      </div>
     </aside>
   );
 }

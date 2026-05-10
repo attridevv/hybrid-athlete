@@ -7,17 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Activity, Heart, BarChart3, Target, Zap, Clock } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from "recharts";
 
-const DEMO_USER_ID = "demo-user";
-
 export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [runs, setRuns] = useState<any[]>([]);
   const [checkIns, setCheckIns] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`/api/analytics?userId=${DEMO_USER_ID}`).then(r => r.json()).then(setData);
-    fetch(`/api/runs?userId=${DEMO_USER_ID}`).then(r => r.json()).then(setRuns);
-    fetch(`/api/checkin?userId=${DEMO_USER_ID}`).then(r => r.json()).then(setCheckIns);
+    fetch("/api/analytics").then(r => r.json()).then(setData);
+    fetch("/api/runs").then(r => r.json()).then(setRuns);
+    fetch("/api/checkin").then(r => r.json()).then(setCheckIns);
   }, []);
 
   const readiness = data?.readiness;

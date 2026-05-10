@@ -6,15 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Loader2, Sparkles, Target, Shield, TrendingUp, Clock } from "lucide-react";
 
-const DEMO_USER_ID = "demo-user";
-
 export default function InsightsPage() {
   const [insights, setInsights] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`/api/insights?userId=${DEMO_USER_ID}`).then(r => r.json()).then(setInsights);
+    fetch("/api/insights").then(r => r.json()).then(setInsights);
   }, []);
 
   const generateInsight = async () => {
@@ -23,7 +21,6 @@ export default function InsightsPage() {
       const res = await fetch("/api/insights", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: DEMO_USER_ID }),
       });
       const data = await res.json();
       setGenerated(data);

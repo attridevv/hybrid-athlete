@@ -1,22 +1,27 @@
 import { NextResponse } from "next/server";
+import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { mobilitySchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, ...data } = body;
-
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-
-    const validated = mobilitySchema.parse(data);
+    const { id: userId } = await requireCurrentDbUser();
+    const validated = mobilitySchema.parse(body);
 
     const log = await prisma.mobilityLog.create({
-      data: { userId, ...validated },
+      data: {
+        userId,
+        ...validated,
+        exercises: validated.exercises ? JSON.stringify(validated.exercises) : undefined,
+      },
     });
 
     return NextResponse.json(log);
   } catch (error: any) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     if (error.name === "ZodError") {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
@@ -24,12 +29,9 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    const { id: userId } = await requireCurrentDbUser();
 
     const logs = await prisma.mobilityLog.findMany({
       where: { userId },
@@ -39,6 +41,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(logs);
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch mobility logs" }, { status: 500 });
   }
 }

@@ -7,9 +7,6 @@ import { Activity, TrendingUp, Award, Clock, Heart, BarChart3, Zap, Target } fro
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { motion } from "framer-motion";
 
-// Note: In production, fetch from API with actual userId
-const DEMO_USER_ID = "demo-user";
-
 interface DashboardData {
   readiness: any;
   readinessTrend: number;
@@ -41,7 +38,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
-    fetch(`/api/analytics?userId=${DEMO_USER_ID}`)
+    fetch("/api/analytics")
       .then(r => r.json())
       .then(setData)
       .catch(console.error);

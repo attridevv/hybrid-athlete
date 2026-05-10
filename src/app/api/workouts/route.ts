@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { workoutSchema } from "@/lib/validation";
 import { calculateSessionLoad } from "@/lib/engines";
@@ -6,11 +7,8 @@ import { calculateSessionLoad } from "@/lib/engines";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, ...data } = body;
-
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-
-    const validated = workoutSchema.parse(data);
+    const { id: userId } = await requireCurrentDbUser();
+    const validated = workoutSchema.parse(body);
 
     // Calculate exercise metrics
     const exercises = validated.exercises?.map(ex => {
@@ -54,6 +52,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(workout);
   } catch (error: any) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     if (error.name === "ZodError") {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
@@ -64,10 +65,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    const { id: userId } = await requireCurrentDbUser();
 
     const workouts = await prisma.workout.findMany({
       where: { userId },
@@ -78,6 +76,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(workouts);
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch workouts" }, { status: 500 });
   }
 }

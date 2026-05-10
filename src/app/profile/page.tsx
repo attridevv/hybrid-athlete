@@ -8,8 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Target, Calendar, Activity, Settings, Save } from "lucide-react";
 
-const DEMO_USER_ID = "demo-user";
-
 export default function ProfilePage() {
   const [form, setForm] = useState({
     height: 178,
@@ -37,7 +35,6 @@ export default function ProfilePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: DEMO_USER_ID,
           ...form,
           raceDate: form.raceDate ? new Date(form.raceDate).toISOString() : undefined,
         }),
