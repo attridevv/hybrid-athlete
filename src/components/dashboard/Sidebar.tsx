@@ -23,7 +23,7 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-zinc-900 border-r border-zinc-800 p-6 max-md:hidden flex flex-col">
       <div className="mb-8">
-        <h1 className="text-lg font-bold text-zinc-100 tracking-tight">VEKTOR</h1>
+        <h1 className="text-lg font-bold text-zinc-100 tracking-tight">GRITIER</h1>
         <p className="text-[10px] text-zinc-500 mt-0.5 uppercase tracking-widest">Command Center</p>
       </div>
       <nav className="space-y-0.5 flex-1">

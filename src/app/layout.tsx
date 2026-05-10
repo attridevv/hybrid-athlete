@@ -6,7 +6,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Vektor - Hybrid Athlete Command Center",
+  title: "Gritier - Hybrid Athlete Command Center",
   description: "Tactical performance dashboard for hybrid athletes",
 };
 
