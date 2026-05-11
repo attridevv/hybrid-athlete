@@ -3,11 +3,12 @@
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Activity, Heart, Dumbbell, TrendingUp, Brain, User, Shield } from "lucide-react";
+import { Home, Activity, Heart, Dumbbell, TrendingUp, Brain, User, Shield, Calendar } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Check-In", href: "/checkin", icon: Activity },
+  { name: "Plan", href: "/plan", icon: Calendar },
   { name: "Runs", href: "/runs", icon: Heart },
   { name: "Workouts", href: "/workouts", icon: Dumbbell },
   { name: "Recovery", href: "/recovery", icon: Shield },

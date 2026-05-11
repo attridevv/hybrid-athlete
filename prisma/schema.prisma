@@ -23,6 +23,7 @@ model User {
   mobilityLogs  MobilityLog[]
   readinessScores ReadinessScore[]
   trainingLoads TrainingLoad[]
+  plans         Plan[]
   accounts      Account[]
   sessions      Session[]
 }
@@ -302,6 +303,26 @@ model AIInsight {
   createdAt   DateTime @default(now())
   
   @@index([userId, createdAt])
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  
+  type        String   // run/workout/recovery
+  name        String?
+  distance    Float?
+  duration    Int?
+  rpe         Int?
+  notes       String?
+  completed   Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId, date])
 }
 
 // Auth models (Clerk or NextAuth)

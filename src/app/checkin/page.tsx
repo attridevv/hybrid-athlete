@@ -14,6 +14,8 @@ import { motion } from "framer-motion";
 export default function CheckInPage() {
   const [submitted, setSubmitted] = useState(false);
   const [readiness, setReadiness] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     sleepHours: 7.5,
     sleepQuality: 6,
@@ -41,7 +43,8 @@ export default function CheckInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/checkin", {
         method: "POST",
@@ -49,9 +52,16 @@ export default function CheckInPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to save check-in");
+        return;
+      }
       setReadiness(data.readiness);
-    } catch (err) {
-      console.error(err);
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,6 +129,11 @@ export default function CheckInPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
         <Tabs defaultValue="sleep" className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800 h-auto p-1 flex-wrap">
             <TabsTrigger value="sleep" className="data-[state=active]:bg-zinc-800 text-xs"><Moon className="h-3 w-3 mr-1" />Sleep</TabsTrigger>
@@ -288,8 +303,8 @@ export default function CheckInPage() {
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full mt-6 bg-zinc-100 text-zinc-900 hover:bg-zinc-200 h-12 text-sm font-semibold">
-          Submit Check-In
+        <Button type="submit" disabled={loading} className="w-full mt-6 bg-zinc-100 text-zinc-900 hover:bg-zinc-200 h-12 text-sm font-semibold disabled:opacity-50">
+          {loading ? "Saving..." : "Submit Check-In"}
         </Button>
       </form>
     </div>
