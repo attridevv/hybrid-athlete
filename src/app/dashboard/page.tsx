@@ -36,12 +36,30 @@ function readinessBg(score: number) {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/analytics")
-      .then(r => r.json())
-      .then(setData)
-      .catch(console.error);
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/analytics");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Failed to load (${res.status})`);
+        }
+        const json = await res.json();
+        if (!cancelled) setData(json);
+      } catch (err: any) {
+        if (!cancelled) setError(err.message || "Could not load dashboard");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   const readiness = data?.readiness;
@@ -54,6 +72,24 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold text-zinc-100">Command Center</h1>
         <p className="text-zinc-500 mt-1 text-sm">Tactical performance overview</p>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+          <p className="text-red-400 text-sm">{error}</p>
+          <button onClick={() => window.location.reload()} className="mt-2 text-xs text-zinc-400 hover:text-zinc-200 underline">Retry</button>
+        </div>
+      )}
+
+      {loading && !data && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 animate-pulse">
+              <div className="h-3 w-16 bg-zinc-800 rounded mb-3" />
+              <div className="h-8 w-20 bg-zinc-800 rounded" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Top Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

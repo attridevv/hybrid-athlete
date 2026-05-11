@@ -3,6 +3,7 @@ import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { runSchema } from "@/lib/validation";
 import { calculateSessionLoad } from "@/lib/engines";
+import { ZodError } from "zod";
 
 export async function POST(request: Request) {
   try {
@@ -45,15 +46,15 @@ export async function POST(request: Request) {
     if (isUnauthorizedError(error)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: "Invalid data — check your inputs" }, { status: 400 });
     }
-    console.error("Error creating run:", error);
-    return NextResponse.json({ error: "Failed to create run" }, { status: 500 });
+    console.error("Error creating run:", error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: "Database connection failed. Try again." }, { status: 500 });
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const { id: userId } = await requireCurrentDbUser();
 
@@ -68,6 +69,7 @@ export async function GET(request: Request) {
     if (isUnauthorizedError(error)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.json({ error: "Failed to fetch runs" }, { status: 500 });
+    console.error("Error fetching runs:", error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: "Failed to load runs" }, { status: 500 });
   }
 }

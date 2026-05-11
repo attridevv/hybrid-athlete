@@ -7,7 +7,6 @@ export async function GET() {
   try {
     const { id: userId } = await requireCurrentDbUser();
 
-    // Fetch last 30 days of data
     const [checkIns, runs, workouts, mobilityLogs, profile, readinessScores, trainingLoads] = await Promise.all([
       prisma.checkIn.findMany({ where: { userId }, orderBy: { date: "desc" }, take: 30 }),
       prisma.run.findMany({ where: { userId }, orderBy: { date: "desc" }, take: 30 }),
@@ -78,7 +77,7 @@ export async function GET() {
     if (isUnauthorizedError(error)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("Error fetching analytics:", error);
-    return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
+    console.error("Error fetching analytics:", error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: "Database connection failed. Try refreshing." }, { status: 500 });
   }
 }

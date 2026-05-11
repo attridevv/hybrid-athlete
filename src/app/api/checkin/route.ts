@@ -3,6 +3,11 @@ import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkInSchema } from "@/lib/validation";
 import { calculateReadiness } from "@/lib/engines";
+import { ZodError } from "zod";
+
+function formatZodErrors(error: ZodError) {
+  return error.issues.map(e => `${e.path.join(".")}: ${e.message}`).join(", ");
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +19,6 @@ export async function POST(request: Request) {
       data: { userId, ...validated },
     });
 
-    // Calculate readiness score
     const profile = await prisma.profile.findUnique({ where: { userId } });
     const recentLoads = await prisma.trainingLoad.findMany({
       where: { userId },
@@ -40,7 +44,6 @@ export async function POST(request: Request) {
       chronicLoad: recentLoads[0]?.chronicLoad || 0,
     });
 
-    // Store readiness score
     await prisma.readinessScore.create({
       data: {
         userId,
@@ -56,15 +59,15 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ checkIn, readiness });
-  } catch (error: any) {
+  } catch (error) {
     if (isUnauthorizedError(error)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: formatZodErrors(error) }, { status: 400 });
     }
-    console.error("Error creating check-in:", error);
-    return NextResponse.json({ error: "Failed to create check-in" }, { status: 500 });
+    console.error("Error creating check-in:", error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: "Database connection failed. Try again." }, { status: 500 });
   }
 }
 
