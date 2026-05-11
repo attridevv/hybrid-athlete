@@ -1,0 +1,8 @@
+.env
+.env.local
+.env.*.local
+Api Key
+node_modules
+.git
+.next
+.DS_Store

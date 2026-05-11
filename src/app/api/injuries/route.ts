@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { injurySchema } from "@/lib/validation";
+import { ZodError } from "zod";
 
 export async function POST(request: Request) {
   try {
@@ -14,14 +15,14 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(injury);
-  } catch (error: any) {
+  } catch (error) {
     if (isUnauthorizedError(error)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: "Invalid injury data — check your inputs" }, { status: 400 });
     }
-    console.error("Error creating injury:", error);
+    console.error("Error creating injury:", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "Failed to create injury" }, { status: 500 });
   }
 }

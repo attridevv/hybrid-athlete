@@ -21,7 +21,23 @@ export async function getCurrentDbUser() {
 
   const existingUser = await prisma.user.findUnique({ where: { clerkId } });
 
-  if (existingUser) return existingUser;
+  if (existingUser) {
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      const name =
+        [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+        clerkUser.username ||
+        existingUser.name;
+      const image = clerkUser.imageUrl || existingUser.image;
+      if (name !== existingUser.name || image !== existingUser.image) {
+        return prisma.user.update({
+          where: { id: existingUser.id },
+          data: { name, image },
+        });
+      }
+    }
+    return existingUser;
+  }
 
   const clerkUser = await currentUser();
 
@@ -30,25 +46,23 @@ export async function getCurrentDbUser() {
   const email =
     clerkUser.primaryEmailAddress?.emailAddress ||
     clerkUser.emailAddresses[0]?.emailAddress ||
-    `${clerkId}@vektor.local`;
+    `${clerkId}@gritier.local`;
   const name =
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
     clerkUser.username ||
     null;
   const image = clerkUser.imageUrl || null;
 
-  const userByEmail = await prisma.user.findUnique({ where: { email } });
-
-  if (userByEmail) {
-    return prisma.user.update({
-      where: { id: userByEmail.id },
-      data: { clerkId, name, image },
+  try {
+    return await prisma.user.create({
+      data: { clerkId, email, name, image },
     });
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return prisma.user.findUnique({ where: { clerkId } });
+    }
+    throw error;
   }
-
-  return prisma.user.create({
-    data: { clerkId, email, name, image },
-  });
 }
 
 export async function requireCurrentDbUser() {

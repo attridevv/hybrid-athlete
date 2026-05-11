@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { mobilitySchema } from "@/lib/validation";
+import { ZodError } from "zod";
 
 export async function POST(request: Request) {
   try {
@@ -18,13 +19,14 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(log);
-  } catch (error: any) {
+  } catch (error) {
     if (isUnauthorizedError(error)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: "Invalid mobility data — check your inputs" }, { status: 400 });
     }
+    console.error("Error logging mobility:", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "Failed to log mobility" }, { status: 500 });
   }
 }
