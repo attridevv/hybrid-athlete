@@ -3,6 +3,7 @@ import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkInSchema } from "@/lib/validation";
 import { calculateReadiness } from "@/lib/engines";
+import { withDbRetry } from "@/lib/retry";
 import { ZodError } from "zod";
 
 function formatZodErrors(error: ZodError) {
@@ -15,9 +16,9 @@ export async function POST(request: Request) {
     const { id: userId } = await requireCurrentDbUser();
     const validated = checkInSchema.parse(body);
 
-    const checkIn = await prisma.checkIn.create({
+    const checkIn = await withDbRetry(() => prisma.checkIn.create({
       data: { userId, ...validated },
-    });
+    }));
 
     const profile = await prisma.profile.findUnique({ where: { userId } });
     const recentLoads = await prisma.trainingLoad.findMany({

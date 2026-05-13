@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { isUnauthorizedError, requireCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { calculateACWR } from "@/lib/engines";
+import { withDbRetry } from "@/lib/retry";
 
 export async function GET() {
   try {
     const { id: userId } = await requireCurrentDbUser();
 
-    const [checkIns, runs, workouts, mobilityLogs, profile, readinessScores, trainingLoads] = await Promise.all([
+    const [checkIns, runs, workouts, mobilityLogs, profile, readinessScores, trainingLoads] = await withDbRetry(() => Promise.all([
       prisma.checkIn.findMany({ where: { userId }, orderBy: { date: "desc" }, take: 30 }),
       prisma.run.findMany({ where: { userId }, orderBy: { date: "desc" }, take: 30 }),
       prisma.workout.findMany({ where: { userId }, orderBy: { date: "desc" }, take: 30, include: { exercises: true } }),
@@ -15,7 +16,7 @@ export async function GET() {
       prisma.profile.findUnique({ where: { userId } }),
       prisma.readinessScore.findMany({ where: { userId }, orderBy: { date: "desc" }, take: 30 }),
       prisma.trainingLoad.findMany({ where: { userId }, orderBy: { date: "desc" }, take: 30 }),
-    ]);
+    ]));
 
     // Latest check-in
     const latestCheckIn = checkIns[0];
